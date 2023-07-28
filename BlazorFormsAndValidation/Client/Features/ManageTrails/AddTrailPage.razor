@@ -1,0 +1,165 @@
+﻿@page "/add-trail"
+@using BlazorFormsAndValidation.Client.Services.TrailsService;
+@using BlazorFormsAndValidation.Client.Validation;
+@using BlazorFormsAndValidation.Client.Features.ManageTrails.Shared;
+@inject ITrailsService TrailsService
+
+<PageTitle>Add Trail - Blazing Trails</PageTitle>
+
+<h3>AddTrailPage</h3>
+
+<EditForm EditContext="_editContext" OnValidSubmit="SubmitForm">
+    <FluentValidationValidator />
+    <div class="row">
+        <div class="col-6">
+            <div class="form-group">
+                <label for="trailName" class="font-weight-bold text-secondary">Name</label>
+                <InputText @bind-Value="_trail.Name" class="form-control" id="trailName" />
+                <ValidationMessage For="@(() => _trail.Name)" />
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col">
+            <div class="form-group">
+                <label for="trailDescription" class="font-weight-bold text-secondary">Description</label>
+                <InputTextArea @bind-Value="_trail.Description" rows="6" class="form-control" id="trailDescription" />
+                <ValidationMessage For="@(() => _trail.Description)" />
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-6">
+            <div class="form-group">
+                <label for="trailLocation" class="font-weight-bold text-secondary">Location</label>
+                <InputText @bind-Value="_trail.Location" class="form-control" id="trailLocation" />
+                <ValidationMessage For="@(() => _trail.Location)" />
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-6">
+            <div class="form-group">
+                <label for="trailLength" class="font-weight-bold text-secondary">Length (km)</label>
+                <InputNumber @bind-Value="_trail.Length" class="form-control" id="trailLength" />
+                <ValidationMessage For="@(() => _trail.Length)" />
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-6">
+            <div class="form-group">
+                <label for="trailTime" class="font-weight-bold text-secondary">Time</label>
+                <InputTime @bind-Value="_trail.TimeInMinutes" id="trailTime" />
+                <ValidationMessage For="@(() => _trail.TimeInMinutes)" />
+            </div>
+        </div>
+    </div>
+
+
+    @{
+        var i = 0;
+    }
+    @foreach (var routeInstruction in _trail.Route)
+    {
+        i++;
+        routeInstruction.Stage = i;
+
+        <div class="row">
+            <div class="col-2">
+                <div class="form-group">
+                    <label class="font-weight-bold text-secondary">Stage</label>
+                    <p>@routeInstruction.Stage</p>
+                </div>
+            </div>
+            <div class="col">
+                <div class="form-group">
+                    <label for="routeInstructionDescription" class="font-weight-bold text-secondary">Description</label>
+                    <InputText @bind-Value="routeInstruction.Description" class="form-control" id="routeInstructionDescription" />
+                    <ValidationMessage For="@(() => routeInstruction.Description)" />
+                </div>
+            </div>
+            <div class="col-1 d-flex mt-3">
+                <button @onclick="@(() => _trail.Route.Remove(routeInstruction))" class="btn btn-link" type="button">
+                    <svg width="1em" height="1em" viewBox="0 0 16 16"
+                         class="bi bi-x-circle-fill text-danger"
+                         fill="currentColor"
+                         xmlns="http://www.w3.org/2000/svg">
+                        <path fill-rule="evenodd" d="M16 8A8 8 0 1 1 0
+                        8a8 8 0 0 1 16 0zM5.354 4.646a.5.5 0 1
+                        0-.708.708L7.293 8l-2.647 2.646a.5.5
+                        0 0 0 .708.708L8 8.707l2.646 2.647a.5.5 0 0 0
+                        .708-.708L8.707 8l2.647-2.646a.5.5 0 0
+                        0-.708-.708L8 7.293 5.354 4.646z" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    }
+
+    <div class="row">
+        <div class="col">
+            <button class="btn btn-outline-primary" type="button" @onclick="@(() => _trail.Route.Add(new TrailFormModel.RouteInstruction()))">
+                Add Instruction
+            </button>
+            <ValidationMessage For="@(() => _trail.Route)" />
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="offset-4 col-8 text-end">
+            <button type="button" class="btn btn-outline-secondary" @onclick="()=> _trail=new TrailFormModel()">Reset</button>
+            <button type="submit" class="btn btn-primary">Submit</button>
+        </div>
+    </div>
+</EditForm>
+
+@code {
+    private TrailFormModel _trail = new TrailFormModel();
+    private bool _submitSuccessful;
+    private string? _errorMessage;
+    private EditContext _editContext = default!;
+
+    protected override void OnInitialized()
+    {
+        _editContext = new EditContext(_trail);
+        _editContext.SetFieldCssClassProvider(new BootstrapCssClassProvider());
+    }
+
+    private async Task SubmitForm()
+    {
+        var command = new AddTrailCommand()
+            {
+                Name = _trail.Name,
+                Description = _trail.Description,
+                Length = _trail.Length,
+                Location = _trail.Location,
+                TimeInMinutes = _trail.TimeInMinutes
+            };
+
+        if (_editContext.Validate())
+        {
+            try
+            {
+                await TrailsService.AddTrail(command);
+            }
+            catch (Exception e)
+            {
+                _errorMessage = e.Message;
+                _submitSuccessful = false;
+                throw;
+            }
+            _trail = new TrailFormModel();
+            _errorMessage = null;
+            _submitSuccessful = true;
+        }
+        else
+        {
+
+        }
+    }
+}
