@@ -2,6 +2,7 @@
 @using BlazorFormsAndValidation.Client.Services.TrailsService;
 @using BlazorFormsAndValidation.Client.Validation;
 @using BlazorFormsAndValidation.Client.Features.ManageTrails.Shared;
+
 @inject ITrailsService TrailsService
 
 <PageTitle>Add Trail - Blazing Trails</PageTitle>
@@ -111,6 +112,15 @@
     </div>
 
     <div class="row">
+        <div class="col-6">
+            <div class="form-group">
+                <label for="trailImage" class="font-weight-bold text-secondary">Image</label>
+                <InputFile OnChange="LoadTrailImage" class="form-control-file" id="trailImage" accept=".png,.jpg,.jpeg" />
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
         <div class="offset-4 col-8 text-end">
             <button type="button" class="btn btn-outline-secondary" @onclick="()=> _trail=new TrailFormModel()">Reset</button>
             <button type="submit" class="btn btn-primary">Submit</button>
@@ -123,6 +133,7 @@
     private bool _submitSuccessful;
     private string? _errorMessage;
     private EditContext _editContext = default!;
+    private IBrowserFile? _trailImage;
 
     protected override void OnInitialized()
     {
@@ -138,8 +149,15 @@
                 Description = _trail.Description,
                 Length = _trail.Length,
                 Location = _trail.Location,
-                TimeInMinutes = _trail.TimeInMinutes
+                TimeInMinutes = _trail.TimeInMinutes,
             };
+
+        if (_trailImage is not null)
+        {
+            //command.FileName = _trailImage.Name;
+            //command.ContentType = _trailImage.ContentType;
+            command.FileContent = await ReadStreamAsync(_trailImage.OpenReadStream());
+        }
 
         if (_editContext.Validate())
         {
@@ -161,5 +179,22 @@
         {
 
         }
+    }
+
+    private void LoadTrailImage(InputFileChangeEventArgs e) => _trailImage = e.File;
+
+    private void ResetForm()
+    {
+        _trail = new TrailFormModel();
+        _editContext = new EditContext(_trail);
+        _editContext.SetFieldCssClassProvider(new BootstrapCssClassProvider());
+        _trailImage = null;
+    }
+
+    private async Task<byte[]> ReadStreamAsync(Stream stream)
+    {
+        using var memoryStream = new MemoryStream();
+        await stream.CopyToAsync(memoryStream);
+        return memoryStream.ToArray();
     }
 }

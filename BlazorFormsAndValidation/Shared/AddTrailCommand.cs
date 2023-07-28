@@ -14,6 +14,7 @@ namespace BlazorFormsAndValidation.Shared
         public string Location { get; set; } = "";
         public int TimeInMinutes { get; set; }
         public int Length { get; set; }
+        public byte[] FileContent { get; set; }
         public List<RouteInstruction> Route { get; set; } = new List<RouteInstruction>();
 
         public class RouteInstruction

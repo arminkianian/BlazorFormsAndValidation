@@ -1,4 +1,5 @@
 ﻿using FluentValidation;
+using Microsoft.AspNetCore.Components.Forms;
 
 namespace BlazorFormsAndValidation.Client.Features.ManageTrucks.Shared
 {
@@ -11,6 +12,8 @@ namespace BlazorFormsAndValidation.Client.Features.ManageTrucks.Shared
         public int TimeInMinutes { get; set; }
         public int Length { get; set; }
         public List<RouteInstruction> Route { get; set; } = new List<RouteInstruction>();
+
+        public IBrowserFile? BrowserFile { get; set; }
 
         public class RouteInstruction
         {
